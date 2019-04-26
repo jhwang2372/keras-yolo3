@@ -1,4 +1,6 @@
 *.jpg
+*.xml
+*.txt
 *.png
 *.weights
 *.h5
