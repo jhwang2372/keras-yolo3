@@ -31,7 +31,7 @@ def _main():
     else:
         # model = create_model(input_shape, anchors, num_classes,
         #     freeze_body=2, weights_path='model_data/trained_weights_stage_1.h5') # make sure you know what you freeze
-        model = create_model(input_shape, anchors, num_classes, weights_path='logs/003/ep024-loss94.148-val_loss93.537.h5')
+        model = create_model(input_shape, anchors, num_classes)
 
     logging = TensorBoard(log_dir=log_dir)
     checkpoint = ModelCheckpoint(log_dir + 'ep{epoch:03d}-loss{loss:.3f}-val_loss{val_loss:.3f}.h5',
@@ -71,7 +71,7 @@ def _main():
     if True:
         for i in range(len(model.layers)):
             model.layers[i].trainable = True
-        model.compile(optimizer=Adam(lr=1e-4), loss={'yolo_loss': lambda y_true, y_pred: y_pred}) # recompile to apply the change
+        model.compile(optimizer=Adam(lr=1e-3), loss={'yolo_loss': lambda y_true, y_pred: y_pred}) # recompile to apply the change
         print('Unfreeze all of the layers.')
 
         batch_size = 8 # note that more GPU memory is required after unfreezing the body
@@ -81,7 +81,7 @@ def _main():
             validation_data=data_generator_wrapper(lines[num_train:], batch_size, input_shape, anchors, num_classes),
             validation_steps=max(1, num_val//batch_size),
             epochs=500,
-            initial_epoch=24,
+            initial_epoch=0,
             callbacks=[logging, checkpoint, reduce_lr, early_stopping])
         model.save_weights(log_dir + 'trained_weights_final.h5')
 
@@ -103,7 +103,7 @@ def get_anchors(anchors_path):
     return np.array(anchors).reshape(-1, 2)
 
 
-def create_model(input_shape, anchors, num_classes, load_pretrained=True, freeze_body=False,
+def create_model(input_shape, anchors, num_classes, load_pretrained=False, freeze_body=False,
             weights_path='model_data/yolo_weights.h5'):
     '''create the training model'''
     K.clear_session() # get a new session
