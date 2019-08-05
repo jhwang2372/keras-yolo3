@@ -251,21 +251,21 @@ def preprocess_true_boxes(true_boxes, input_shape, anchors, num_classes):
 
     true_boxes = np.array(true_boxes, dtype='float32')
     input_shape = np.array(input_shape, dtype='int32')
-    boxes_xy = (true_boxes[..., 0:2] + true_boxes[..., 2:4]) // 2
-    boxes_wh = true_boxes[..., 2:4] - true_boxes[..., 0:2]
-    true_boxes[..., 0:2] = boxes_xy/input_shape[::-1]
+    boxes_xy = (true_boxes[..., 0:2] + true_boxes[..., 2:4]) // 2  #calculate the center point of box (xmin+xmax)/2 (ymin+ymax)/2
+    boxes_wh = true_boxes[..., 2:4] - true_boxes[..., 0:2]   #calculate the w and h (xmax-xmin) (ymax-ymin)
+    true_boxes[..., 0:2] = boxes_xy/input_shape[::-1]   #normalize the xywh regards to input_shape 416,416
     true_boxes[..., 2:4] = boxes_wh/input_shape[::-1]
 
-    m = true_boxes.shape[0]
-    grid_shapes = [input_shape//{0:32, 1:16, 2:8}[l] for l in range(num_layers)]
+    m = true_boxes.shape[0]   # no. of batch size
+    grid_shapes = [input_shape//{0:32, 1:16, 2:8}[l] for l in range(num_layers)]  #13,26,52
     y_true = [np.zeros((m,grid_shapes[l][0],grid_shapes[l][1],len(anchor_mask[l]),5+num_classes),
-        dtype='float32') for l in range(num_layers)]
+        dtype='float32') for l in range(num_layers)]  #(#batch size, 13,13,7)(#batch size, 26,26,7) (#batch size, 52,52,7)
 
     # Expand dim to apply broadcasting.
-    anchors = np.expand_dims(anchors, 0)
-    anchor_maxes = anchors / 2.
+    anchors = np.expand_dims(anchors, 0)  #from (9,2) to (1,9,2)
+    anchor_maxes = anchors / 2.   # anchor_max_xy is half of the anchor box, that means the (0,0) is at the center of the anchor
     anchor_mins = -anchor_maxes
-    valid_mask = boxes_wh[..., 0]>0
+    valid_mask = boxes_wh[..., 0]>0    # if there is invalid box
 
     for b in range(m):
         # Discard zero rows.

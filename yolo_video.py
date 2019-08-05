@@ -2,6 +2,7 @@ import sys
 import argparse
 from yolo import YOLO, detect_video
 from PIL import Image
+import time
 
 def detect_img(yolo):
     while True:
@@ -12,7 +13,9 @@ def detect_img(yolo):
             print('Open Error! Try again!')
             continue
         else:
+            t0 = time.time()
             r_image = yolo.detect_image(image)
+            print("Detection took {}s".format(time.time() -t0))
             r_image.show()
     yolo.close_session()
 
